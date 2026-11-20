@@ -1,0 +1,14 @@
+# Build output (CMake / Visual Studio)
+build/
+out/
+.vs/
+CMakeSettings.json
+*.exe
+*.pdb
+*.obj
+
+# Editor settings
+.vscode/
+
+# The user's saved recipes (keep your personal data out of the repo)
+recipes.txt

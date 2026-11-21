@@ -13,3 +13,7 @@ std::string trim(const std::string& text);
 // Splits text into lines, trims each one, and skips blank lines.
 // "2 eggs\n\n1 cup milk" -> {"2 eggs", "1 cup milk"}
 std::vector<std::string> splitLines(const std::string& text);
+
+// The opposite of splitLines: puts each entry on its own line.
+// {"2 eggs", "1 cup milk"} -> "2 eggs\n1 cup milk"
+std::string joinLines(const std::vector<std::string>& lines);

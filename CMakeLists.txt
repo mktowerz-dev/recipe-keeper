@@ -12,7 +12,7 @@ include(FetchContent)
 FetchContent_Declare(
     imgui
     GIT_REPOSITORY https://github.com/ocornut/imgui.git
-    GIT_TAG        v1.91.8
+    GIT_TAG        v1.92.9b   # 1.92.x adds word-wrap for multi-line text boxes
 )
 FetchContent_MakeAvailable(imgui)
 

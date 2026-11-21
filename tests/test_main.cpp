@@ -40,6 +40,42 @@ static void testTextUtils()
     std::vector<std::string> lines = splitLines("2 eggs\n\n  1 cup milk  \n");
     check(lines.size() == 2, "splitLines skips blank lines");
     check(lines.size() == 2 && lines[1] == "1 cup milk", "splitLines trims each line");
+
+    check(joinLines({ "2 eggs", "1 cup milk" }) == "2 eggs\n1 cup milk",
+          "joinLines puts each entry on its own line");
+    check(splitLines(joinLines(lines)) == lines, "joinLines then splitLines gives back the same list");
+}
+
+static void testUpdateRecipe()
+{
+    RecipeBook book;
+    book.addRecipe(makeRecipe("Pancakes"));
+    book.addRecipe(makeRecipe("Waffles"));
+
+    // Change only the ingredients (same name) - allowed.
+    Recipe changed = makeRecipe("Pancakes");
+    changed.ingredients = { "3 eggs" };
+    int index = book.findByName("Pancakes");
+    check(book.updateRecipe(index, changed), "editing a recipe's ingredients works");
+    check(book.getRecipes()[book.findByName("Pancakes")].ingredients.size() == 1,
+          "edited ingredients were saved");
+
+    // Rename "Waffles" to "Belgian Waffles" - the list should re-sort.
+    check(book.updateRecipe(book.findByName("Waffles"), makeRecipe("Belgian Waffles")),
+          "renaming a recipe works");
+    check(book.getRecipes()[0].name == "Belgian Waffles", "renamed recipe is re-sorted A-Z");
+    check(book.findByName("Waffles") == -1, "old name is gone after renaming");
+
+    // Only changing capitals of its own name is fine.
+    check(book.updateRecipe(book.findByName("Pancakes"), makeRecipe("PANCAKES")),
+          "changing only the capitals of a name works");
+
+    // Problems that should be rejected.
+    check(!book.updateRecipe(book.findByName("PANCAKES"), makeRecipe("belgian waffles")),
+          "renaming to another recipe's name is rejected");
+    check(!book.updateRecipe(0, makeRecipe("   ")), "renaming to a blank name is rejected");
+    check(!book.updateRecipe(99, makeRecipe("Nope")), "editing a position that doesn't exist is rejected");
+    check(book.getRecipes().size() == 2, "rejected edits didn't add or remove recipes");
 }
 
 static void testAddRecipe()
@@ -69,6 +105,24 @@ static void testSortedOrder()
           recipes[1].name == "brownies" &&
           recipes[2].name == "waffles",
           "recipes are sorted A-Z ignoring capitals");
+}
+
+static void testDeleteRecipe()
+{
+    RecipeBook book;
+    book.addRecipe(makeRecipe("Apple Pie"));
+    book.addRecipe(makeRecipe("Brownies"));
+    book.addRecipe(makeRecipe("Cookies"));
+
+    check(book.deleteRecipe(book.findByName("Brownies")), "deleting a recipe works");
+    check(book.getRecipes().size() == 2, "book has one fewer recipe after deleting");
+    check(book.findByName("Brownies") == -1, "deleted recipe can't be found anymore");
+    check(book.getRecipes()[0].name == "Apple Pie" && book.getRecipes()[1].name == "Cookies",
+          "the other recipes are still there, still A-Z");
+
+    check(!book.deleteRecipe(-1), "deleting position -1 is rejected");
+    check(!book.deleteRecipe(5), "deleting a position that doesn't exist is rejected");
+    check(book.getRecipes().size() == 2, "rejected deletes didn't remove anything");
 }
 
 static void testSaveAndLoad()
@@ -112,6 +166,8 @@ int main()
     testTextUtils();
     testAddRecipe();
     testSortedOrder();
+    testUpdateRecipe();
+    testDeleteRecipe();
     testSaveAndLoad();
 
     std::cout << "\n" << (failures == 0 ? "All tests passed." : "Some tests FAILED.") << "\n";

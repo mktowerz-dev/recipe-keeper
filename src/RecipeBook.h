@@ -12,6 +12,14 @@ public:
     // or another recipe already has that name (capital letters don't matter).
     bool addRecipe(const Recipe& recipe);
 
+    // Replaces the recipe at position index with updated (then re-sorts).
+    // Returns false (and changes nothing) if index is out of range, the new name
+    // is blank, or a *different* recipe already has that name.
+    bool updateRecipe(int index, const Recipe& updated);
+
+    // Removes the recipe at position index. Returns false if there isn't one.
+    bool deleteRecipe(int index);
+
     // All recipes, sorted alphabetically ignoring capital letters.
     const std::vector<Recipe>& getRecipes() const;
 

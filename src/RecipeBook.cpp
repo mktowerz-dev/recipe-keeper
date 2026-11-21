@@ -18,6 +18,38 @@ bool RecipeBook::addRecipe(const Recipe& recipe)
     return true;
 }
 
+bool RecipeBook::updateRecipe(int index, const Recipe& updated)
+{
+    if (index < 0 || index >= static_cast<int>(recipes.size()))
+        return false;                       // no recipe at that position
+
+    Recipe cleaned = updated;
+    cleaned.name = trim(cleaned.name);
+    if (cleaned.name.empty())
+        return false;
+
+    // It's fine if the name matches the recipe we're editing (e.g. only the
+    // ingredients changed), but not if it matches a different recipe.
+    int existing = findByName(cleaned.name);
+    if (existing != -1 && existing != index)
+        return false;
+
+    recipes[index] = cleaned;
+    sortByName();                           // the name may have changed
+    return true;
+}
+
+bool RecipeBook::deleteRecipe(int index)
+{
+    if (index < 0 || index >= static_cast<int>(recipes.size()))
+        return false;
+
+    // erase() needs an iterator (a "pointer" into the vector), so we start at
+    // begin() and move forward 'index' spots. The list stays sorted.
+    recipes.erase(recipes.begin() + index);
+    return true;
+}
+
 const std::vector<Recipe>& RecipeBook::getRecipes() const
 {
     return recipes;

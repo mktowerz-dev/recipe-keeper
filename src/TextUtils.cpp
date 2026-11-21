@@ -37,3 +37,15 @@ std::vector<std::string> splitLines(const std::string& text)
     }
     return lines;
 }
+
+std::string joinLines(const std::vector<std::string>& lines)
+{
+    std::string text;
+    for (size_t i = 0; i < lines.size(); i++)
+    {
+        if (i > 0)
+            text += "\n";  // newline between entries, but not after the last one
+        text += lines[i];
+    }
+    return text;
+}

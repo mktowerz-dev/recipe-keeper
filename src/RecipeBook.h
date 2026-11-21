@@ -19,6 +19,14 @@ public:
     // or -1 if there isn't one.
     int findByName(const std::string& name) const;
 
+    // Writes every recipe to a text file. Returns false if the file can't be written.
+    bool saveToFile(const std::string& path) const;
+
+    // Replaces the current recipes with the ones in the file.
+    // Returns false if the file can't be opened (for example, the first time
+    // the program runs, before anything has been saved).
+    bool loadFromFile(const std::string& path);
+
 private:
     std::vector<Recipe> recipes;
 

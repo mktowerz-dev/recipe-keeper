@@ -42,6 +42,14 @@ cmake --build build --config Debug
 build\Debug\RecipeKeeper.exe
 ```
 
+Your recipes are saved automatically to `%APPDATA%\RecipeKeeper\recipes.txt`
+(paste that into File Explorer's address bar to find it).
+
+## Running the tests
+
+In Visual Studio pick **RecipeTests.exe** from the ▶ dropdown and press **Ctrl+F5**,
+or run `build\Debug\RecipeTests.exe`. Each check prints PASS or FAIL.
+
 ## Screenshot
 
 _Coming soon._

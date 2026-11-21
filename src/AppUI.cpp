@@ -16,6 +16,7 @@ static std::string newName;
 static std::string newIngredients;  // one ingredient per line
 static std::string newSteps;        // one step per line
 static std::string formError;       // message shown if the form can't be saved
+static std::string saveError;       // message shown if writing the save file failed
 
 static void clearAddForm()
 {
@@ -78,7 +79,7 @@ static void drawRecipeDetails(const Recipe& recipe)
 // ---------------------------------------------------------------------------
 // Right side, option 2: the form for adding a new recipe.
 // ---------------------------------------------------------------------------
-static void drawAddForm(RecipeBook& book)
+static void drawAddForm(RecipeBook& book, const std::string& saveFilePath)
 {
     ImGui::SeparatorText("New Recipe");
 
@@ -109,7 +110,13 @@ static void drawAddForm(RecipeBook& book)
         }
         else
         {
-            // Saved! Show the new recipe. We look it up by name because the
+            // Write all recipes to the file right away, so nothing is lost.
+            if (book.saveToFile(saveFilePath))
+                saveError.clear();
+            else
+                saveError = "Couldn't save to " + saveFilePath;
+
+            // Added! Show the new recipe. We look it up by name because the
             // list was re-sorted, so its position may not be at the end.
             selectedIndex = book.findByName(recipe.name);
             showAddForm = false;
@@ -130,7 +137,7 @@ static void drawAddForm(RecipeBook& book)
 // ---------------------------------------------------------------------------
 // The whole screen.
 // ---------------------------------------------------------------------------
-void drawUI(RecipeBook& book)
+void drawUI(RecipeBook& book, const std::string& saveFilePath)
 {
     // One ImGui window that fills the entire app window.
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
@@ -150,11 +157,14 @@ void drawUI(RecipeBook& book)
     ImGui::BeginChild("DetailPanel", ImVec2(0, 0), ImGuiChildFlags_Borders);
     const std::vector<Recipe>& recipes = book.getRecipes();
     if (showAddForm)
-        drawAddForm(book);
+        drawAddForm(book, saveFilePath);
     else if (selectedIndex >= 0 && selectedIndex < static_cast<int>(recipes.size()))
         drawRecipeDetails(recipes[selectedIndex]);
     else
         ImGui::TextDisabled("Pick a recipe on the left, or click \"+ New Recipe\".");
+
+    if (!saveError.empty())
+        ImGui::TextColored(ImVec4(0.8f, 0.1f, 0.1f, 1.0f), "%s", saveError.c_str());
     ImGui::EndChild();
 
     ImGui::End();

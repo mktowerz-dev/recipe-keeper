@@ -16,6 +16,8 @@
 
 #include <d3d11.h>
 #include <windows.h>
+#include <filesystem>
+#include <string>
 
 // ---------------------------------------------------------------------------
 // Graphics (DirectX 11) objects. Think of these as "the canvas" ImGui draws on.
@@ -32,6 +34,20 @@ static void cleanupDeviceD3D();
 static void createRenderTarget();
 static void cleanupRenderTarget();
 static LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
+// Where recipes are saved: C:\Users\<you>\AppData\Roaming\RecipeKeeper\recipes.txt
+// (AppData is the standard place for Windows programs to keep their data.
+// Paste %APPDATA%\RecipeKeeper into File Explorer's address bar to open it.)
+static std::string getSaveFilePath()
+{
+    char appData[MAX_PATH] = {};
+    GetEnvironmentVariableA("APPDATA", appData, MAX_PATH);
+
+    std::filesystem::path folder = std::filesystem::path(appData) / "RecipeKeeper";
+    std::error_code error;
+    std::filesystem::create_directories(folder, error);  // make the folder if it's missing
+    return (folder / "recipes.txt").string();
+}
 
 // WinMain is the starting point for a Windows GUI program (instead of main()).
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
@@ -68,7 +84,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     ImGui_ImplDX11_Init(g_device, g_context);
 
     // 4. All of the user's recipes live here while the program runs.
+    //    Load the ones saved last time (on the very first run there's no file yet).
     RecipeBook book;
+    const std::string saveFilePath = getSaveFilePath();
+    book.loadFromFile(saveFilePath);
 
     // 5. Main loop: runs ~60 times a second until the window is closed.
     bool done = false;
@@ -100,7 +119,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         ImGui_ImplWin32_NewFrame();
         ImGui::NewFrame();
 
-        drawUI(book);
+        drawUI(book, saveFilePath);
 
         ImGui::Render();
         const float clearColor[4] = { 0.94f, 0.92f, 0.88f, 1.0f };

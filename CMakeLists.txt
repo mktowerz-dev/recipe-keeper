@@ -33,9 +33,25 @@ target_include_directories(imgui PUBLIC
 )
 
 # ---------------------------------------------------------------------------
-# Our program
+# Recipe logic (no GUI code), shared by the app and the tests
+# ---------------------------------------------------------------------------
+add_library(recipe_core STATIC
+    src/RecipeBook.cpp
+    src/TextUtils.cpp
+)
+target_include_directories(recipe_core PUBLIC src)
+
+# ---------------------------------------------------------------------------
+# The app
 # ---------------------------------------------------------------------------
 add_executable(RecipeKeeper WIN32
     src/main.cpp
+    src/AppUI.cpp
 )
-target_link_libraries(RecipeKeeper PRIVATE imgui d3d11 dxgi d3dcompiler)
+target_link_libraries(RecipeKeeper PRIVATE recipe_core imgui d3d11 dxgi d3dcompiler)
+
+# ---------------------------------------------------------------------------
+# Automated tests: build\Debug\RecipeTests.exe
+# ---------------------------------------------------------------------------
+add_executable(RecipeTests tests/test_main.cpp)
+target_link_libraries(RecipeTests PRIVATE recipe_core)

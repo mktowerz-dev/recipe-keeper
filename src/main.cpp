@@ -1,20 +1,21 @@
-// Recipe Keeper - starter window
+// Recipe Keeper - program entry point
 //
 // This file is the "plumbing" that opens a Windows window and lets Dear ImGui
 // draw buttons, text boxes and lists in it. It is adapted from Dear ImGui's
 // official example (examples/example_win32_directx11/main.cpp).
 //
-// You will mostly work inside drawUI() at the bottom. The rest sets up the
-// window and the graphics card, and you will rarely need to touch it.
+// The actual screens live in AppUI.cpp, and the recipe logic in RecipeBook.cpp.
+// You will rarely need to change this file.
+
+#include "AppUI.h"
+#include "RecipeBook.h"
 
 #include "imgui.h"
 #include "imgui_impl_win32.h"
 #include "imgui_impl_dx11.h"
-#include "imgui_stdlib.h"   // InputText with std::string
 
 #include <d3d11.h>
 #include <windows.h>
-#include <string>
 
 // ---------------------------------------------------------------------------
 // Graphics (DirectX 11) objects. Think of these as "the canvas" ImGui draws on.
@@ -31,7 +32,6 @@ static void cleanupDeviceD3D();
 static void createRenderTarget();
 static void cleanupRenderTarget();
 static LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-static void drawUI();
 
 // WinMain is the starting point for a Windows GUI program (instead of main()).
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
@@ -67,7 +67,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     ImGui_ImplWin32_Init(hwnd);
     ImGui_ImplDX11_Init(g_device, g_context);
 
-    // 4. Main loop: runs ~60 times a second until the window is closed.
+    // 4. All of the user's recipes live here while the program runs.
+    RecipeBook book;
+
+    // 5. Main loop: runs ~60 times a second until the window is closed.
     bool done = false;
     while (!done)
     {
@@ -97,7 +100,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         ImGui_ImplWin32_NewFrame();
         ImGui::NewFrame();
 
-        drawUI();
+        drawUI(book);
 
         ImGui::Render();
         const float clearColor[4] = { 0.94f, 0.92f, 0.88f, 1.0f };
@@ -107,7 +110,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         g_swapChain->Present(1, 0);   // 1 = wait for vsync (limits to screen refresh rate)
     }
 
-    // 5. Clean up.
+    // 6. Clean up.
     ImGui_ImplDX11_Shutdown();
     ImGui_ImplWin32_Shutdown();
     ImGui::DestroyContext();
@@ -115,37 +118,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     DestroyWindow(hwnd);
     UnregisterClassW(wc.lpszClassName, wc.hInstance);
     return 0;
-}
-
-// ---------------------------------------------------------------------------
-// YOUR UI GOES HERE.
-// ImGui is "immediate mode": every frame you simply describe what should be on
-// screen. ImGui::Button() draws a button AND returns true on the frame it was
-// clicked, so the logic sits right next to the widget.
-// ---------------------------------------------------------------------------
-static void drawUI()
-{
-    // Make one window that fills the whole app window.
-    const ImGuiViewport* viewport = ImGui::GetMainViewport();
-    ImGui::SetNextWindowPos(viewport->WorkPos);
-    ImGui::SetNextWindowSize(viewport->WorkSize);
-    ImGui::Begin("Recipe Keeper", nullptr,
-                 ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove);
-
-    ImGui::Text("Recipe Keeper");
-    ImGui::Separator();
-    ImGui::TextWrapped("Setup works! This window is the starting point for the project.");
-
-    // A tiny demo of an input field and a button, so you can see how they work.
-    static std::string name;        // 'static' keeps the value between frames
-    static int clickCount = 0;
-    ImGui::InputText("Recipe name", &name);
-    if (ImGui::Button("Click me"))
-        clickCount++;
-    ImGui::SameLine();
-    ImGui::Text("Clicked %d times. You typed: %s", clickCount, name.c_str());
-
-    ImGui::End();
 }
 
 // ---------------------------------------------------------------------------

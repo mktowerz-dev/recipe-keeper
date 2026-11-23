@@ -385,6 +385,11 @@ static void drawRecipeForm(RecipeBook& book, const std::string& saveFilePath)
         recipe.steps = splitLines(formSteps);
         recipe.categories = formCategories;
 
+        if (isEditing)
+        {
+            recipe.favorite = book.getRecipes()[editingIndex].favorite;
+        }
+
         if (trim(recipe.name).empty())
         {
             formError = "Please enter a recipe name.";

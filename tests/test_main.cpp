@@ -44,6 +44,13 @@ static void testTextUtils()
     check(joinLines({ "2 eggs", "1 cup milk" }) == "2 eggs\n1 cup milk",
           "joinLines puts each entry on its own line");
     check(splitLines(joinLines(lines)) == lines, "joinLines then splitLines gives back the same list");
+
+    // Search
+    check(containsTextIgnoreCase("Chicken Strips", "chick"), "search: 'chick' finds 'Chicken Strips'");
+    check(containsTextIgnoreCase("Chicken Strips", "STRIPS"), "search: capital letters don't matter");
+    check(containsTextIgnoreCase("Sticky Toffee Pudding", "toffee pud"), "search: matches the middle of a name");
+    check(!containsTextIgnoreCase("Pumpkin Bread", "chick"), "search: no match returns false");
+    check(containsTextIgnoreCase("Pumpkin Bread", "  "), "search: empty search matches everything");
 }
 
 static void testUpdateRecipe()
@@ -160,6 +167,34 @@ static void testCategories()
     check(!book.deleteCategory("Nope"), "deleting a category that doesn't exist is rejected");
 }
 
+static void testFavorites()
+{
+    RecipeBook book;
+    book.addRecipe(makeRecipe("Pancakes"));
+    book.addRecipe(makeRecipe("Waffles"));
+    int index = book.findByName("Waffles");
+
+    check(!book.getRecipes()[index].favorite, "new recipes are not favorites");
+    check(book.setFavorite(index, true), "marking a favorite works");
+    check(book.getRecipes()[index].favorite, "recipe is a favorite after marking it");
+    check(book.setFavorite(index, false), "un-marking a favorite works");
+    check(!book.getRecipes()[index].favorite, "recipe is not a favorite after un-marking it");
+    check(!book.setFavorite(99, true), "favoriting a position that doesn't exist is rejected");
+
+    // Favorites survive save + load.
+    const std::string testFile = "test_favorites.txt";
+    book.setFavorite(book.findByName("Waffles"), true);
+    book.saveToFile(testFile);
+
+    RecipeBook loaded;
+    loaded.loadFromFile(testFile);
+    check(loaded.getRecipes()[loaded.findByName("Waffles")].favorite,
+          "a favorite is still a favorite after save + load");
+    check(!loaded.getRecipes()[loaded.findByName("Pancakes")].favorite,
+          "a non-favorite is still not a favorite after save + load");
+    std::remove(testFile.c_str());
+}
+
 static void testSaveAndLoad()
 {
     const std::string testFile = "test_recipes.txt";
@@ -209,6 +244,7 @@ int main()
     testUpdateRecipe();
     testDeleteRecipe();
     testCategories();
+    testFavorites();
     testSaveAndLoad();
 
     std::cout << "\n" << (failures == 0 ? "All tests passed." : "Some tests FAILED.") << "\n";

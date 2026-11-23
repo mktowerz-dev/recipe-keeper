@@ -9,4 +9,5 @@ struct Recipe
     std::vector<std::string> ingredients;  // one entry per ingredient, e.g. "2 cups flour"
     std::vector<std::string> steps;        // in order: steps[0] is step 1
     std::vector<std::string> categories;   // e.g. {"Breakfast", "Desserts"}; can be empty
+    bool favorite = false;                 // true = favorite, false = not
 };

@@ -22,6 +22,7 @@ static Screen screen = Screen::Recipe;
 static int selectedIndex = -1;          // which recipe is selected in the list (-1 = none)
 static int editingIndex  = -1;          // recipe being edited, or -1 when adding a new one
 static std::string openCategory;        // category opened in the Categories tab ("" = show the list of categories)
+static std::string searchText;          // what's typed in the search box ("" = no search)
 
 // What the user is typing into the add/edit form.
 static std::string formName;
@@ -114,8 +115,9 @@ static int countRecipesIn(const RecipeBook& book, const std::string& category)
 // ---------------------------------------------------------------------------
 // Left side: a clickable A-Z list of recipe names.
 // If category is "", every recipe is listed; otherwise only that category's.
+// Recipes that don't match the search box are skipped too.
 // ---------------------------------------------------------------------------
-static void drawRecipeRows(const RecipeBook& book, const std::string& category)
+static void drawRecipeRows(const RecipeBook& book, const std::string& category, bool favoritesOnly)
 {
     const std::vector<Recipe>& recipes = book.getRecipes();
     int shownCount = 0;
@@ -123,6 +125,10 @@ static void drawRecipeRows(const RecipeBook& book, const std::string& category)
     {
         if (!category.empty() && !containsIgnoreCase(recipes[i].categories, category))
             continue;  // not in this category
+        if (!containsTextIgnoreCase(recipes[i].name, searchText))
+            continue;  // doesn't match the search
+        if (favoritesOnly && !recipes[i].favorite)
+            continue;  // not a favorite
 
         ImGui::PushID(i);  // gives each row a unique ID, even if two names look alike
         bool isSelected = (i == selectedIndex);
@@ -137,6 +143,10 @@ static void drawRecipeRows(const RecipeBook& book, const std::string& category)
 
     if (recipes.empty())
         ImGui::TextDisabled("No recipes yet.");
+    else if (shownCount == 0 && !trim(searchText).empty())
+        ImGui::TextDisabled("No recipes match \"%s\".", trim(searchText).c_str());
+    else if (shownCount == 0 && favoritesOnly)
+        ImGui::TextDisabled("No favorites yet.");
     else if (shownCount == 0)
         ImGui::TextDisabled("No recipes in this category.");
 }
@@ -171,7 +181,7 @@ static void drawCategoriesTab(const RecipeBook& book)
         if (ImGui::Button("< Back to Categories", ImVec2(-1, 0)))
             openCategory.clear();
         ImGui::SeparatorText(openCategory.c_str());
-        drawRecipeRows(book, openCategory);
+        drawRecipeRows(book, openCategory, false);
     }
 }
 
@@ -185,17 +195,30 @@ static void drawRecipeList(const RecipeBook& book)
         openAddForm();
     ImGui::Spacing();
 
+    // Search box: the list below updates as you type (it's redrawn every frame).
+    // An "X" button appears to clear it once something is typed.
+    bool hasSearch = !searchText.empty();
+    ImGui::SetNextItemWidth(hasSearch ? -40.0f : -1.0f);  // leave room for the X button
+    ImGui::InputTextWithHint("##search", "Search recipes...", &searchText);
+    if (hasSearch)
+    {
+        ImGui::SameLine();
+        if (ImGui::Button("X", ImVec2(-1, 0)))
+            searchText.clear();
+    }
+    ImGui::Spacing();
+
     // A tab bar: only the code inside the selected tab's "if" runs each frame.
     if (ImGui::BeginTabBar("ListTabs"))
     {
         if (ImGui::BeginTabItem("Recipes"))
         {
-            drawRecipeRows(book, "");  // "" = all recipes
+            drawRecipeRows(book, "", false);  // "" = all recipes
             ImGui::EndTabItem();
         }
         if (ImGui::BeginTabItem("Favorites"))
         {
-            ImGui::TextDisabled("Favorites coming soon.");
+            drawRecipeRows(book, "", true);
             ImGui::EndTabItem();
         }
         if (ImGui::BeginTabItem("Categories"))
@@ -249,9 +272,15 @@ static void drawRecipeDetails(RecipeBook& book, int index, const std::string& sa
 
     if (ImGui::Button("Edit"))
         openEditForm(book, index);
-    ImGui::SameLine();
+    ImGui::SameLine(); 
     if (ImGui::Button("Delete"))
         ImGui::OpenPopup("Delete Recipe?");  // shown by drawDeletePopup below
+    ImGui::SameLine();
+    if (ImGui::Button(recipe.favorite ? "Remove from Favorites" : "Add to Favorites"))
+    {
+        book.setFavorite(index, !recipe.favorite);
+        saveBook(book, saveFilePath);
+    }
 
     // If the recipe was just deleted, 'recipe' no longer exists, so stop here
     // instead of drawing its ingredients.

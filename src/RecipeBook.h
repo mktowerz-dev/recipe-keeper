@@ -23,6 +23,10 @@ public:
     // Removes the recipe at position index. Returns false if there isn't one.
     bool deleteRecipe(int index);
 
+    // Marks the recipe at position index as a favorite (isFavorite = true)
+    // or takes it off favorites (false). Returns false if there isn't one.
+    bool setFavorite(int index, bool isFavorite);
+
     // All recipes, sorted alphabetically ignoring capital letters.
     const std::vector<Recipe>& getRecipes() const;
 

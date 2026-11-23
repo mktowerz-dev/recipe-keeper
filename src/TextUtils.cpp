@@ -72,3 +72,13 @@ void sortAlphabetically(std::vector<std::string>& list)
 {
     std::sort(list.begin(), list.end(), wordComesBefore);
 }
+
+bool containsTextIgnoreCase(const std::string& text, const std::string& part)
+{
+    // Make both lowercase so "CHICK" and "chick" are treated the same,
+    // then find() looks for part inside text. It returns std::string::npos
+    // ("no position") when part isn't there.
+    std::string lowerText = toLower(text);
+    std::string lowerPart = toLower(trim(part));
+    return lowerText.find(lowerPart) != std::string::npos;
+}

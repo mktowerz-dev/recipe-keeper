@@ -56,6 +56,15 @@ bool RecipeBook::deleteRecipe(int index)
     return true;
 }
 
+bool RecipeBook::setFavorite(int index, bool isFavorite)
+{
+    if (index < 0 || index >= static_cast<int>(recipes.size()))
+        return false;
+
+    recipes[index].favorite = isFavorite;
+    return true;
+}
+
 const std::vector<Recipe>& RecipeBook::getRecipes() const
 {
     return recipes;
@@ -196,6 +205,8 @@ bool RecipeBook::saveToFile(const std::string& path) const
             file << "INGREDIENT " << ingredient << "\n";
         for (const std::string& step : recipe.steps)
             file << "STEP " << step << "\n";
+        if (recipe.favorite)
+            file << "FAVORITE\n";
         file << "END\n\n";
     }
     return static_cast<bool>(file);  // false if something went wrong while writing
@@ -232,6 +243,8 @@ bool RecipeBook::loadFromFile(const std::string& path)
             current = Recipe();                     // start a fresh, empty recipe
         else if (readField(line, "NAME", value))
             current.name = value;
+        else if (line == "FAVORITE")
+            current.favorite = true;
         else if (readField(line, "IN_CATEGORY", value))
             current.categories.push_back(value);
         else if (readField(line, "INGREDIENT", value))

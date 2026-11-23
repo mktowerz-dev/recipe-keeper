@@ -24,3 +24,8 @@ bool containsIgnoreCase(const std::vector<std::string>& list, const std::string&
 
 // Sorts a list of words A-Z, ignoring capital letters.
 void sortAlphabetically(std::vector<std::string>& list);
+
+// True if part appears anywhere inside text, ignoring capital letters.
+// An empty (or all-spaces) part matches everything.
+// containsTextIgnoreCase("Chicken Strips", "chick") -> true
+bool containsTextIgnoreCase(const std::string& text, const std::string& part);

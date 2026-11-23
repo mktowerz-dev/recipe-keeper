@@ -17,3 +17,10 @@ std::vector<std::string> splitLines(const std::string& text);
 // The opposite of splitLines: puts each entry on its own line.
 // {"2 eggs", "1 cup milk"} -> "2 eggs\n1 cup milk"
 std::string joinLines(const std::vector<std::string>& lines);
+
+// True if list has an entry equal to value, ignoring capital letters.
+// containsIgnoreCase({"Breakfast"}, "breakfast") -> true
+bool containsIgnoreCase(const std::vector<std::string>& list, const std::string& value);
+
+// Sorts a list of words A-Z, ignoring capital letters.
+void sortAlphabetically(std::vector<std::string>& list);

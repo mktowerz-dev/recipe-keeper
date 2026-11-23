@@ -125,6 +125,41 @@ static void testDeleteRecipe()
     check(book.getRecipes().size() == 2, "rejected deletes didn't remove anything");
 }
 
+static void testCategories()
+{
+    RecipeBook book;
+    check(book.addCategory("Desserts"), "adding a category works");
+    check(book.addCategory("breakfast"), "adding a second category works");
+    check(!book.addCategory("DESSERTS"), "duplicate category (different capitals) is rejected");
+    check(!book.addCategory("  "), "blank category is rejected");
+    check(book.getCategories().size() == 2 && book.getCategories()[0] == "breakfast",
+          "categories are sorted A-Z");
+
+    // A recipe in two categories, typed with different capitals and a repeat.
+    Recipe pancakes = makeRecipe("Pancakes");
+    pancakes.categories = { "Breakfast", "DESSERTS", "breakfast" };
+    book.addRecipe(pancakes);
+    const Recipe& saved = book.getRecipes()[book.findByName("Pancakes")];
+    check(saved.categories.size() == 2, "a recipe can be in more than one category (repeats removed)");
+    check(saved.categories.size() == 2 && saved.categories[1] == "Desserts",
+          "recipe uses the category's original spelling");
+
+    // A recipe with a brand-new category creates it.
+    Recipe soup = makeRecipe("Tomato Soup");
+    soup.categories = { "Dinner" };
+    book.addRecipe(soup);
+    check(containsIgnoreCase(book.getCategories(), "Dinner"), "a recipe's new category is created");
+
+    // Deleting a category keeps the recipes but takes the category off them.
+    check(book.deleteCategory("desserts"), "deleting a category works");
+    check(!containsIgnoreCase(book.getCategories(), "Desserts"), "deleted category is gone from the list");
+    check(book.getRecipes().size() == 2, "deleting a category does NOT delete its recipes");
+    const Recipe& after = book.getRecipes()[book.findByName("Pancakes")];
+    check(after.categories.size() == 1 && after.categories[0] == "breakfast",
+          "deleted category is taken off the recipe");
+    check(!book.deleteCategory("Nope"), "deleting a category that doesn't exist is rejected");
+}
+
 static void testSaveAndLoad()
 {
     const std::string testFile = "test_recipes.txt";
@@ -133,8 +168,10 @@ static void testSaveAndLoad()
     Recipe pancakes = makeRecipe("Pancakes");
     pancakes.ingredients = { "2 eggs", "1 cup milk" };
     pancakes.steps = { "Mix everything.", "Cook on a hot pan." };
+    pancakes.categories = { "Breakfast" };
     original.addRecipe(pancakes);
     original.addRecipe(makeRecipe("Brownies"));  // a recipe with no ingredients or steps
+    original.addCategory("Snacks");               // a category with no recipes in it
 
     check(original.saveToFile(testFile), "saving to a file works");
 
@@ -151,7 +188,10 @@ static void testSaveAndLoad()
               "ingredients survive save + load");
         check(recipe.steps.size() == 2 && recipe.steps[0] == "Mix everything.",
               "steps survive save + load in order");
+        check(recipe.categories.size() == 1 && recipe.categories[0] == "Breakfast",
+              "a recipe's categories survive save + load");
     }
+    check(loaded.getCategories().size() == 2, "categories (even empty ones) survive save + load");
 
     std::remove(testFile.c_str());  // clean up the test file
 
@@ -168,6 +208,7 @@ int main()
     testSortedOrder();
     testUpdateRecipe();
     testDeleteRecipe();
+    testCategories();
     testSaveAndLoad();
 
     std::cout << "\n" << (failures == 0 ? "All tests passed." : "Some tests FAILED.") << "\n";

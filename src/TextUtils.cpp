@@ -1,4 +1,5 @@
 #include "TextUtils.h"
+#include <algorithm>
 #include <cctype>
 #include <sstream>
 
@@ -48,4 +49,26 @@ std::string joinLines(const std::vector<std::string>& lines)
         text += lines[i];
     }
     return text;
+}
+
+bool containsIgnoreCase(const std::vector<std::string>& list, const std::string& value)
+{
+    std::string target = toLower(value);
+    for (const std::string& item : list)
+    {
+        if (toLower(item) == target)
+            return true;
+    }
+    return false;
+}
+
+// Returns true if word a should come before word b (A-Z, ignoring capitals).
+static bool wordComesBefore(const std::string& a, const std::string& b)
+{
+    return toLower(a) < toLower(b);
+}
+
+void sortAlphabetically(std::vector<std::string>& list)
+{
+    std::sort(list.begin(), list.end(), wordComesBefore);
 }
